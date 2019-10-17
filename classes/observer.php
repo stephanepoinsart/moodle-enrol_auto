@@ -60,16 +60,21 @@ class observer {
             return;
         }
 
-        if ($instance->customint3 != ENROL_AUTO_MOD_VIEWED || empty($instance->customtext2)) {
+        if ($instance->customint3 == ENROL_AUTO_MOD_VIEWED) {
+	    // plugin mode is check for particular activity
+            if (!empty($instance->customtext2)) {
+                return;
+            }
             // nothing to see here :D
+            $enabledmods = explode(',', $instance->customtext2);
+            $modname = str_replace('mod_', '', $eventdata['component']);
+            if (!in_array($modname, $enabledmods)) {
+                return;
+	    }
+	} elseif ($instance->customint3 != ENROL_AUTO_COURSE_VIEWED) {
+            // if neither activity or course viewed, we are in the wrong event
             return;
-        }
-
-        $enabledmods = explode(',', $instance->customtext2);
-        $modname = str_replace('mod_', '', $eventdata['component']);
-        if (!in_array($modname, $enabledmods)) {
-            return;
-        }
+	}
 
         if (!$DB->record_exists('user_enrolments', array('enrolid' => $instance->id, 'userid' => $eventdata['userid']))) {
             $autoplugin->enrol_user($instance, $eventdata['userid'], $instance->roleid);
